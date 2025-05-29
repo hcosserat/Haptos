@@ -11,4 +11,4 @@ Haptos is a simple Android app that plays audio files with synchronized haptic f
 ## Notes
 
 - Haptic feedback is not available when using Bluetooth or wired headphones.
-- If haptic feedback does not work, ensure your device supports the required features and is running a compatible OS version.
+- Haptic feedback might stop if another app or system event get haptic focus (notification, volume slider, ...). Hitting pause/play will reload the generator.
