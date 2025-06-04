@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.OpenableColumns
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -63,16 +64,39 @@ class AudioPlaylistAdapter(
         holder.trackName.text = item.name
         holder.trackDuration.text = item.durationFormatted
         holder.itemView.setOnClickListener { onTrackClick(position) }
+        val context = holder.itemView.context
 
         if (position == getCurrentPlayingIndex()) {
-            holder.itemView.setBackgroundColor(
+            holder.itemView.background =
+                ContextCompat.getDrawable(context, R.drawable.selected_track_shape)
+            holder.trackName.setTextColor(
                 ContextCompat.getColor(
-                    holder.itemView.context,
-                    R.color.highlight_color
+                    context,
+                    R.color.selected_track_text_color
+                )
+            )
+            holder.trackDuration.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    R.color.selected_track_text_color
                 )
             )
         } else {
             holder.itemView.setBackgroundColor(Color.TRANSPARENT)
+            holder.trackName.setTextColor(
+                TypedValue().let { tv ->
+                    val theme = context.theme
+                    theme.resolveAttribute(android.R.attr.textColorPrimary, tv, true)
+                    ContextCompat.getColor(context, tv.resourceId)
+                }
+            )
+            holder.trackDuration.setTextColor(
+                TypedValue().let { tv ->
+                    val theme = context.theme
+                    theme.resolveAttribute(android.R.attr.textColorSecondary, tv, true)
+                    ContextCompat.getColor(context, tv.resourceId)
+                }
+            )
         }
     }
 
@@ -126,7 +150,11 @@ class MainActivity : AppCompatActivity() {
                     loadPlaylist(newPlaylistItems)
                 } else {
                     clearPlaylist()
-                    val toast = Toast.makeText(this, "No audio files found in this folder", Toast.LENGTH_SHORT)
+                    val toast = Toast.makeText(
+                        this,
+                        "No audio files found in this folder",
+                        Toast.LENGTH_SHORT
+                    )
                     toast.show()
                 }
             }
@@ -266,7 +294,6 @@ class MainActivity : AppCompatActivity() {
         binding.btnPlayPause.setIconResource(android.R.drawable.ic_media_play)
     }
 
-
     private fun playTrack(index: Int) {
         if (index in playlist.indices) {
             currentPlaylistIndex = index
@@ -289,7 +316,6 @@ class MainActivity : AppCompatActivity() {
         binding.btnPrevious.isEnabled = playlist.size > 1
     }
 
-
     private fun setupMediaPlayer(item: PlaylistItem) {
         mediaPlayer?.release() // Release previous instance fully
         mediaPlayer = null
@@ -303,7 +329,7 @@ class MainActivity : AppCompatActivity() {
                     AudioAttributes.Builder()
                         .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                         .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setHapticChannelsMuted(false) // Ensure this is intended
+                        .setHapticChannelsMuted(false)
                         .build()
                 )
                 if (audioSessionId > 0) {
@@ -316,7 +342,7 @@ class MainActivity : AppCompatActivity() {
                     playNext(true) // Auto play next
                 }
 
-                setOnErrorListener { mp, what, extra ->
+                setOnErrorListener { _, _, _ ->
                     clearPlaylist()
                     true // True if the error has been handled
                 }
@@ -371,7 +397,7 @@ class MainActivity : AppCompatActivity() {
         playTrack(currentPlaylistIndex)
     }
 
-    private fun getFileName(uri: Uri): String? {
+    private fun getFileName(uri: Uri): String {
         var fileName: String? = null
         if (uri.scheme == "content") {
             try {
